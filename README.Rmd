@@ -40,3 +40,13 @@ In the organizations template, two different collaboration questions are offered
 - The alternative question version allows a person to choose multiple options. In this example, we are saying that we have separate activities that people can be involved in simultaneously. Notice if they select “None” here, it is exclusive (meaning they won’t be able to select it AND another activities). For this one, you could also choose not to include a “None” category and assume that if no selection is chosen, then no activities are engaged in. Removing also reduced the burden for a long survey (with many people to have to scroll through/select for). *Notice the removal of "only" from the Communication column.*
 
 ## Contact (participant list) .csv template
+
+In order to send indidivual links via email through qualtrics, you are required to upload a .csv file with at least these column names:
+
+- FirstName
+- LastName
+- Email
+
+Beyond those, you also include any data that you'd like embedded with the data or for use during the survey process. For social network surveys, you want to include a numeric column that many call a "sort id". This just means that whatever number of contacts you have (say 50) will be in order 1 through 50 and then will also match the order in which they appear in the survey. This is helpful both to used the embedded field to avoid showing a person their own name to rate, and also helps on data analysis on the back end (you'll see).
+
+For me, I also like to include any known attributes that we don't plan to ask in the survey. For example, I might include what city/state an organization or indidivual is in or other attributes that might be helpful in the analysis stage.
