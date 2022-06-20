@@ -13,8 +13,9 @@ I'm hoping this will serve as a "starter kit" for setting up and analyzing a soc
 
 - .qsf files to import template questions into Qualtrics
 - .csv contact file to import participant lists into Qualtrics
-- .csv sample survey data
-- .rmd sample survey data cleaning code
+- .qsf full survey example *coming soon*
+- .csv sample survey data (from full survey example) *coming soon*
+- .rmd sample survey data cleaning code *coming soon*
 
 ## Template questions
 
