@@ -29,7 +29,9 @@ There are two example .qsf files (at the moment). One that is geared toward *ind
 
 In both, the first question is a "contact" question. This is often used in social network surveys to whittle down to the smaller list of people (through carry forward logic) that will be assessed further on in the survey. It is meant to reduce some respondent burden (and some use it for analyzing frequency of contact). Subsequent sections use the contact question to determine which names will show. 
 
-It is important to note that the contact question itself includes display logic as initially, you want to be sure that people/orgs are not shown their own name to rate. This is where you need to be sure to include a "sortID" or something alike in your uploaded contact sheet. You will need to reference this embedded data for survey display logic. **(will insert screenshot of Q later)**
+It is important to note that the contact question itself includes display logic as initially, you want to be sure that people/orgs are not shown their own name to rate. This is where you need to be sure to include a "sortID" or something alike in your uploaded contact sheet. You will need to reference this embedded data for survey display logic.
+
+![Example](community-contact.png)
 
 ### Collaboration
 
