@@ -36,11 +36,14 @@ It is important to note that the contact question itself includes display logic 
 ### Collaboration
 
 In the organizations template, two different collaboration questions are offered:
-**(will insert screenshot of Q later)**
 
 - The first allows just one activity per person/org e.g. the type of collaboration in an ordinal fashion (where one type is considered "stronger" or of more value than another). For example, in the template, we are saying that Cooperation is stronger than Communication only, and so on. On the back end, Communication will be assigned an edge weight of 1, Cooperation 2, Collaboration 3, and Partnership 4. To look at edge weights, you could look at average in vs. out, or decide to take the average between.
 
+![Example](community-collab-ordinal.png)
+
 - The alternative question version allows a person to choose multiple options. In this example, we are saying that we have separate activities that people can be involved in simultaneously. Notice if they select “None” here, it is exclusive (meaning they won’t be able to select it AND another activities). For this one, you could also choose not to include a “None” category and assume that if no selection is chosen, then no activities are engaged in. Removing also reduced the burden for a long survey (with many people to have to scroll through/select for). *Notice the removal of "only" from the Communication column.*
+
+![Example](community-collab-activities.png)
 
 ## Contact (participant list) .csv template
 
