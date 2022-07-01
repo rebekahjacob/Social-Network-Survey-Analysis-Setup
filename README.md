@@ -82,7 +82,7 @@ offered:
     to scroll through/select for). *Notice the removal of “only” from
     the Communication column.*
 
-![Example](./screen shots/community-collab-activities.png)
+![Example](https://github.com/rebekahjacob/Social-Network-Survey-Analysis-Setup/blob/master/screen%20shots/community-collab-activities.png)
 
 ## Contact (participant list) .csv template
 
