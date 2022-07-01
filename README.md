@@ -53,7 +53,7 @@ shown their own name to rate. This is where you need to be sure to
 include a “sortID” or something alike in your uploaded contact sheet.
 You will need to reference this embedded data for survey display logic.
 
-![Example](./screen shots/community-contact.png)
+![Example](https://github.com/rebekahjacob/Social-Network-Survey-Analysis-Setup/blob/master/screen%20shots/community-contact.png)
 
 ### Collaboration
 
@@ -69,7 +69,7 @@ offered:
     Partnership 4. To look at edge weights, you could look at average in
     vs. out, or decide to take the average between.
 
-![Example](./screen shots/community-collab-ordinal.png)
+![Example](https://github.com/rebekahjacob/Social-Network-Survey-Analysis-Setup/blob/master/screen%20shots/community-collab-ordinal.png)
 
   - The alternative question version allows a person to choose multiple
     options. In this example, we are saying that we have separate
