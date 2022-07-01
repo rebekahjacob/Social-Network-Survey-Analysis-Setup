@@ -1,4 +1,6 @@
-Social Network Survey/Analysis Setup
+---
+title: Social Network Survey/Analysis Setup
+---
 ================
 
 <span style="color: red;">**This is a work in progress\!**</span>
@@ -10,11 +12,12 @@ analyzing a social network survey.
 
 ## What’s here
 
-  - .qsf files to import template questions into Qualtrics
-  - .csv contact file to import participant lists into Qualtrics
-  - .qsf full survey example *coming soon*
-  - .csv sample survey data (from full survey example) *coming soon*
-  - .rmd sample survey data cleaning code *coming soon*
+  - .qsf files to import template questions directly into Qualtrics
+  - .csv contact file templates to import participant lists into Qualtrics
+  - Example Survey with 
+      - .pdf full survey example
+      - .csv sample survey data (from full survey example)
+      - .rmd sample survey data cleaning code *coming soon*
 
 ## Template questions
 
@@ -23,7 +26,9 @@ network data. There is quite a bit of set up (including display logic)
 that needs to happen both within the survey and also using some embedded
 contact information (from participant contact information), so having a
 starting template to import could save some time. If it doesn’t, then I
-have probably wasted both your and my time\!
+have probably wasted both your and my time\! 
+
+**[Here](https://www.qualtrics.com/support/survey-platform/survey-module/survey-tools/import-and-export-surveys/)** are instructions on how to import .qsf files into Qualtrics.
 
 Social network data also comes with some unique aspects of cleaning the
 survey data. Here, I will offer some very basic examples that also might
@@ -48,7 +53,7 @@ shown their own name to rate. This is where you need to be sure to
 include a “sortID” or something alike in your uploaded contact sheet.
 You will need to reference this embedded data for survey display logic.
 
-![Example](community-contact.png)
+![Example](./screen shots/community-contact.png)
 
 ### Collaboration
 
@@ -64,7 +69,7 @@ offered:
     Partnership 4. To look at edge weights, you could look at average in
     vs. out, or decide to take the average between.
 
-![Example](community-collab-ordinal.png)
+![Example](./screen shots/community-collab-ordinal.png)
 
   - The alternative question version allows a person to choose multiple
     options. In this example, we are saying that we have separate
@@ -77,7 +82,7 @@ offered:
     to scroll through/select for). *Notice the removal of “only” from
     the Communication column.*
 
-![Example](community-collab-activities.png)
+![Example](./screen shots/community-collab-activities.png)
 
 ## Contact (participant list) .csv template
 
