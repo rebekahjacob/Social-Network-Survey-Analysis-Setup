@@ -1,0 +1,1556 @@
+---
+title: 'SNA Example Visualizations Template- Fellow'
+author: "Rebekah Jacob"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, echo = FALSE)
+```
+
+```{r}
+library(tidyverse) #for data mgmt
+library(DT) #for interactive html tables
+library(igraph) #for network graph figures
+library(arsenal) #for tableby function in member tables
+```
+
+```{r}
+net_list<- readRDS("net_list.rds") #network list 
+
+atts<- openxlsx::read_csv("Contacts/attribute-file.csv") #attributes
+```
+
+# Network Members
+
+The table below describes members of the full network at each year of data collection. Since there was not a new cohort in 2023, much of the information remains the same except for one item assessed directly through the survey- Discipline (not admin data). This is because we did not have 100% response at either timepoint and different people may have completed the survey and/or they responded differently in 2023 that they did in 2022 to the discipline item.
+
+```{r results='asis'}
+
+# controls for all Tableby tables throughout
+mycontrols  <- tableby.control(total=FALSE, #don't want total column
+                               test=FALSE, #don't want pvalue
+                               numeric.stats = c("meansd"), digits=2L, cat.stats = c("countpct"))
+
+person_char <- tableby(~
+                  position +
+                  location +
+                  referred +
+                  connect_rating +
+                  connect_rating_bi, data=atts, control=mycontrols)
+
+summary(person_char)
+```
+
+# Network Measures {.tabset .tabset-pills}
+```{r}
+#table fun for html viewing
+table_fun<- function(x){
+  datatable(x, rownames=TRUE, options = list(dom="t"))
+}
+
+
+#for undirected
+  calcFun <- function(x) {
+    # number of connected nodes
+    connected_nodes <- vcount(x)- sum(degree(x)==0)
+    # number of ties
+    edges <- ecount(x)
+    # density
+    density <- round(edge_density(x, loops=FALSE), 2)
+    #Betweenness centralization
+    btw<-round(centr_betw(x, directed=FALSE)$centralization, 2) #for nondirected graphs, need to adjust for directed
+    #degree centralization
+    centr_degree<- round(centr_degree(x, mode="all", loops=FALSE)$centralization, 2)
+    #mean degree
+    degree_mean<- round(mean(degree(x, mode="all", loops=FALSE)), 2)
+    #median degree
+    degree_med<- median(degree(x, mode="all", loops=FALSE))
+    #min degree
+    degree_min<- min(degree(x, mode="all", loops=FALSE))
+    #max degree
+    degree_max<- max(degree(x, mode="all", loops=FALSE))
+    #isolates
+    isolates<- sum(degree(x, mode="all", loops=FALSE)==0)
+    #add all into list
+    L<- list(connected_nodes, edges, density, btw, centr_degree, degree_mean, degree_med, degree_min, degree_max, isolates)
+    #Unlist into dataframes
+    as.data.frame(matrix(unlist(L), nrow=length(unlist(L[1]))))
+  }
+
+
+#for directed graph
+  calcFun2 <- function(x) {
+    # number of connected nodes
+    connected_nodes <- vcount(x)- sum(degree(x)==0)
+    # number of ties
+    edges <- ecount(x)
+    # density
+    density <- round(edge_density(x, loops=FALSE), 2)
+    #Betweenness centralization
+    btw<-round(centr_betw(x, directed=TRUE)$centralization, 2) #Change for directed graph
+    #degree centralization
+    centr_degree_all<- round(centr_degree(x, mode="all", loops=FALSE)$centralization, 2) #all
+
+    #mean degree
+    degree_mean_all<- round(mean(degree(x, mode="all", loops=FALSE)), 2) #all
+
+    #median degree
+    degree_med_all<- median(degree(x, mode="all", loops=FALSE)) #all
+
+    #min degree
+    degree_min_all<- min(degree(x, mode="all", loops=FALSE)) #all
+
+    #max degree
+    degree_max_all<- max(degree(x, mode="all", loops=FALSE)) #all
+
+    #isolates
+    isolates_all<- sum(degree(x, mode="all", loops=FALSE)==0) #all
+
+    #add all into list
+    L<- list(connected_nodes, edges, density, btw, centr_degree_all, degree_mean_all, degree_med_all, degree_min_all, degree_max_all, isolates_all)
+    #Unlist into dataframes
+    as.data.frame(matrix(unlist(L), nrow=length(unlist(L[1]))))
+  }
+
+
+
+```
+
+```{r}
+#for undirected
+df_list<- lapply(net_list2020, calcFun)
+
+ net_stats_df20<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df20)<-c("Collaboration", "connected nodes", "edges", "density", "betweenness cent", "degree cent", "mean degree", "med degree", "min degree", "max degree", "isolates")
+
+
+
+df_list<- lapply(net_list2021, calcFun)
+
+ net_stats_df21<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df21)<-c("Collaboration", "connected nodes", "edges", "density", "betweenness cent", "degree cent", "mean degree", "med degree", "min degree", "max degree", "isolates")
+
+
+
+df_list<- lapply(net_list2022, calcFun)
+
+ net_stats_df22<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df22)<-c("Collaboration", "connected nodes", "edges", "density", "betweenness cent", "degree cent", "mean degree", "med degree", "min degree", "max degree", "isolates")
+
+
+df_list<- lapply(net_list2023, calcFun)
+
+ net_stats_df23<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df23)<-c("Collaboration", "connected nodes", "edges", "density", "betweenness cent", "degree cent", "mean degree", "med degree", "min degree", "max degree", "isolates")
+
+combined_stats_df<- rbind(net_stats_df20, net_stats_df21, net_stats_df22, net_stats_df23)
+```
+
+```{r}
+# for directed Mentoring
+
+df_list<- lapply(net_list2020, calcFun2)
+
+ net_stats_df20<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df20)<-c("Collaboration", 'connected_nodes', 'edges', 'density', 'btw', 'centr_degree_all', 'degree_mean_all', 'degree_med_all', 'degree_min_all','degree_max_all', 'isolates_all')
+
+
+
+df_list<- lapply(net_list2021, calcFun2)
+
+ net_stats_df21<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df21)<-c("Collaboration", 'connected_nodes', 'edges', 'density', 'btw', 'centr_degree_all', 'degree_mean_all', 'degree_med_all', 'degree_min_all','degree_max_all', 'isolates_all')
+
+
+df_list<- lapply(net_list2022, calcFun2)
+
+ net_stats_df22<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df22)<-c("Collaboration", 'connected_nodes', 'edges', 'density', 'btw', 'centr_degree_all', 'degree_mean_all', 'degree_med_all', 'degree_min_all','degree_max_all', 'isolates_all')
+
+
+df_list<- lapply(net_list2023, calcFun2)
+
+ net_stats_df23<- bind_rows(df_list, .id = "Collaboration")
+ 
+colnames(net_stats_df23)<-c("Collaboration", 'connected_nodes', 'edges', 'density', 'btw', 'centr_degree_all', 'degree_mean_all', 'degree_med_all', 'degree_min_all','degree_max_all', 'isolates_all')
+
+#the combine df we'll pass for mentoring only to adjust for "directed net stats on centralization
+combined_stats_df2<- rbind(net_stats_df20, net_stats_df21, net_stats_df22, net_stats_df23) 
+```
+
+## Contact
+```{r}
+table_fun(
+  combined_stats_df %>%
+  filter(grepl("contact", Collaboration)) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+
+# here is looking at the mean valued edge for contact. Probably not what we care about, but didn't include in main function because I'm applying it to all
+# round(mean(E(net_list2020$contact2020net)$weight), 2)
+
+# round(mean(E(net_list2021$contact2021net)$weight), 2) #bring in new people new with less contact? A better way to understand this?
+
+```
+
+## Collaboration {.tabset .tabset-pills}
+
+### Research
+```{r}
+
+table_fun(
+  combined_stats_df %>%
+  filter(str_detect(Collaboration, "research")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+### Manuscript
+```{r}
+
+table_fun(
+  combined_stats_df %>%
+  filter(str_detect(Collaboration, "manuscript")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+### Grant
+```{r}
+
+table_fun(
+  combined_stats_df %>%
+  filter(str_detect(Collaboration, "grant")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+### Teach
+```{r}
+
+table_fun(
+  combined_stats_df %>%
+  filter(str_detect(Collaboration, "teach")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+### Present
+```{r}
+
+table_fun(
+  combined_stats_df %>%
+  filter(str_detect(Collaboration, "present")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+### Any Collaboration
+```{r}
+
+table_fun(
+  combined_stats_df %>%
+  filter(str_detect(Collaboration, "anycoll")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+## Mentoring
+```{r}
+table_fun(
+  combined_stats_df2 %>%
+  filter(str_detect(Collaboration, "mentor")) %>%
+  t() %>%
+  janitor::row_to_names(row_number = 1)
+)
+```
+
+# Group Measures (Full Network)
+
+Here we look at subgroup averages of degree.
+```{r set degree as network attributes}
+fun_att_deg<- function(x){
+  x<-set.vertex.attribute(x, "degree", value=degree(x, mode="all", loops=FALSE))
+}
+
+net_list2020<- lapply(net_list2020, fun_att_deg)
+
+net_list2021<- lapply(net_list2021, fun_att_deg)
+
+net_list2022<- lapply(net_list2022, fun_att_deg)
+
+net_list2023<- lapply(net_list2023, fun_att_deg)
+```
+
+```{r create dfs from igraphs 2020}
+#here we create df from igraph, if chose vertices as the "what" argument, returned will be the number of unique nodes and their attributes in nice df
+research_df20 <- get.data.frame(net_list2020$research2020net, what="vertices")
+manuscript_df20 <- get.data.frame(net_list2020$manuscript2020net, what="vertices")
+grant_df20 <- get.data.frame(net_list2020$grant2020net, what="vertices")
+teach_df20 <- get.data.frame(net_list2020$teach2020net, what="vertices")
+present_df20 <- get.data.frame(net_list2020$present2020net, what="vertices")
+anycoll_df20 <- get.data.frame(net_list2020$anycoll2020net, what="vertices")
+
+df_list20<- list(research_df20, manuscript_df20, grant_df20, teach_df20, present_df20, anycoll_df20)
+
+names(df_list20)<- c("Research", "Manuscript", "Grant", "Teach", "Present", "Any Collaboration")
+```
+
+```{r create dfs from igraphs 2021}
+research_df21 <- get.data.frame(net_list2021$research2021net, what="vertices")
+manuscript_df21 <- get.data.frame(net_list2021$manuscript2021net, what="vertices")
+grant_df21 <- get.data.frame(net_list2021$grant2021net, what="vertices")
+teach_df21 <- get.data.frame(net_list2021$teach2021net, what="vertices")
+present_df21 <- get.data.frame(net_list2021$present2021net, what="vertices")
+anycoll_df21 <- get.data.frame(net_list2021$anycoll2021net, what="vertices")
+
+df_list21<- list(research_df21, manuscript_df21, grant_df21, teach_df21, present_df21, anycoll_df21)
+
+names(df_list21)<- c("Research", "Manuscript", "Grant", "Teach", "Present", "Any Collaboration")
+```
+
+```{r create dfs from igraphs 2022}
+research_df22 <- get.data.frame(net_list2022$research2022net, what="vertices")
+manuscript_df22 <- get.data.frame(net_list2022$manuscript2022net, what="vertices")
+grant_df22 <- get.data.frame(net_list2022$grant2022net, what="vertices")
+teach_df22 <- get.data.frame(net_list2022$teach2022net, what="vertices")
+present_df22 <- get.data.frame(net_list2022$present2022net, what="vertices")
+anycoll_df22 <- get.data.frame(net_list2022$anycoll2022net, what="vertices")
+
+df_list22<- list(research_df22, manuscript_df22, grant_df22, teach_df22, present_df22, anycoll_df22)
+
+names(df_list22)<- c("Research", "Manuscript", "Grant", "Teach", "Present", "Any Collaboration")
+```
+
+```{r create dfs from igraphs 2023}
+research_df23 <- get.data.frame(net_list2023$research2023net, what="vertices")
+manuscript_df23 <- get.data.frame(net_list2023$manuscript2023net, what="vertices")
+grant_df23 <- get.data.frame(net_list2023$grant2023net, what="vertices")
+teach_df23 <- get.data.frame(net_list2023$teach2023net, what="vertices")
+present_df23 <- get.data.frame(net_list2023$present2023net, what="vertices")
+anycoll_df23 <- get.data.frame(net_list2023$anycoll2023net, what="vertices")
+
+df_list23<- list(research_df23, manuscript_df23, grant_df23, teach_df23, present_df23, anycoll_df23)
+
+names(df_list23)<- c("Research", "Manuscript", "Grant", "Teach", "Present", "Any Collaboration")
+```
+
+```{r calcs for subgroups}
+subgroup_fun<- function(x, ...){
+  x %>%
+  group_by_(..., .drop = TRUE) %>%
+    summarise(deg_mean=round(mean(degree, na.rm=TRUE), 1), 
+              deg_median=median(degree, na.rm=TRUE), 
+              deg_range=paste0(min(degree), ",", max(degree))
+    )
+}
+
+#2020
+role_stats20<- lapply(df_list20, subgroup_fun, "role")
+disease_stats20<- lapply(df_list20, subgroup_fun, "disease")
+discipline_stats20<- lapply(df_list20, subgroup_fun, "discipline")
+urm_stats20<- lapply(df_list20, subgroup_fun, "urm")
+
+#2021
+role_stats21<- lapply(df_list21, subgroup_fun, "role")
+disease_stats21<- lapply(df_list21, subgroup_fun, "disease")
+discipline_stats21<- lapply(df_list21, subgroup_fun, "discipline")
+urm_stats21<- lapply(df_list21, subgroup_fun, "urm")
+
+#2022
+role_stats22<- lapply(df_list22, subgroup_fun, "role")
+disease_stats22<- lapply(df_list22, subgroup_fun, "disease")
+discipline_stats22<- lapply(df_list22, subgroup_fun, "discipline")
+urm_stats22<- lapply(df_list22, subgroup_fun, "urm")
+
+#2023
+role_stats23<- lapply(df_list23, subgroup_fun, "role")
+disease_stats23<- lapply(df_list23, subgroup_fun, "disease")
+discipline_stats23<- lapply(df_list23, subgroup_fun, "discipline")
+urm_stats23<- lapply(df_list23, subgroup_fun, "urm")
+```
+
+
+## 2020 {.tabset .tabset-pills}
+
+### Research {.tabset .tabset-pills}
+#### Role
+```{r}
+
+#table fun for this section
+table_fun_groups<- function(x){
+  datatable(x, rownames=FALSE, options = list(dom="t"))
+}
+
+table_fun_groups(
+  role_stats20$Research
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats20$Research
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats20$Research
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats20$Research
+)
+```
+
+### Manuscript {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats20$Manuscript
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats20$Manuscript
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats20$Manuscript
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats20$Manuscript
+)
+```
+
+### Grant {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats20$Grant
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats20$Grant
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats20$Grant
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats20$Grant
+)
+```
+
+### Teach {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats20$Teach
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats20$Teach
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats20$Teach
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats20$Teach
+)
+```
+
+### Present {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats20$Present
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats20$Present
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats20$Present
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats20$Present
+)
+```
+
+### Any Collaboration {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats20$'Any Collaboration'
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats20$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats20$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats20$'Any Collaboration'
+)
+```
+
+## 2021 {.tabset .tabset-pills}
+### Research {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats21$Research
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats21$Research
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats21$Research
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats21$Research
+)
+```
+
+### Manuscript {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats21$Manuscript
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats21$Manuscript
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats21$Manuscript
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats21$Manuscript
+)
+```
+
+### Grant {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats21$Grant
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats21$Grant
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats21$Grant
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats21$Grant
+)
+```
+
+### Teach {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats21$Teach
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats21$Teach
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats21$Teach
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats21$Teach
+)
+```
+
+### Present {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats21$Present
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats21$Present
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats21$Present
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats21$Present
+)
+```
+
+### Any Collaboration {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats21$'Any Collaboration'
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats21$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats21$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats21$'Any Collaboration'
+)
+```
+
+## 2022 {.tabset .tabset-pills}
+### Research {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats22$Research
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats22$Research
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats22$Research
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats22$Research
+)
+```
+
+### Manuscript {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats22$Manuscript
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats22$Manuscript
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats22$Manuscript
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats22$Manuscript
+)
+```
+
+### Grant {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats22$Grant
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats22$Grant
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats22$Grant
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats22$Grant
+)
+```
+
+
+### Teach {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats22$Teach
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats22$Teach
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats22$Teach
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats22$Teach
+)
+```
+
+### Present {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats22$Present
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats22$Present
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats22$Present
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats22$Present
+)
+```
+
+### Any Collaboration {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats22$'Any Collaboration'
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats22$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats22$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats22$'Any Collaboration'
+)
+```
+
+## 2023 {.tabset .tabset-pills}
+### Research {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats23$Research
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats23$Research
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats23$Research
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats23$Research
+)
+```
+
+### Manuscript {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats23$Manuscript
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats23$Manuscript
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats23$Manuscript
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats23$Manuscript
+)
+```
+
+### Grant {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats23$Grant
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats23$Grant
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats23$Grant
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats23$Grant
+)
+```
+
+
+### Teach {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats23$Teach
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats23$Teach
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats23$Teach
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats23$Teach
+)
+```
+
+### Present {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats23$Present
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats23$Present
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats23$Present
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats23$Present
+)
+```
+
+### Any Collaboration {.tabset .tabset-pills}
+#### Role
+```{r}
+table_fun_groups(
+  role_stats23$'Any Collaboration'
+)
+```
+
+#### Disease
+```{r}
+table_fun_groups(
+  disease_stats23$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+table_fun_groups(
+  discipline_stats23$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+table_fun_groups(
+  urm_stats23$'Any Collaboration'
+)
+```
+
+# Group Measures (Fellows only)
+
+## Figures {.tabset .tabset-pills}
+### Avg Degree by URM status (2020-2022)
+
+The below figure displays fellows' average degree (2020-2022) by URM status. It was rendered for use in the IS-2 qualitative interviews.
+
+```{r fig calc overall mean for subgroups only fellows 2020 to 2022}
+
+rbind(df_list20$`Any Collaboration`, df_list21$`Any Collaboration`, df_list22$`Any Collaboration`) %>%
+  filter(role!="Faculty Mentor") %>%
+  group_by(urm) %>%
+  summarise(deg_mean=round(mean(degree, na.rm=TRUE), 1)) %>%
+  ggplot(aes(x=urm, y=deg_mean, fill=urm)) +
+  geom_col(stat="identity", width = 0.6) +
+  scale_fill_manual(values=c("#044444", "#cb5c04")) +
+  theme(legend.position = "none") +
+  geom_text(aes(label = paste0(deg_mean, " Ties")), color="white", vjust = 2) +
+  labs(x ="Fellow's URM Status", y = "Degree (Network average 2020-2022)")
+
+ggsave("Average-degree-by-URM-status-2020-2022.png")
+```
+
+
+### Avg Degree by URM status (2020-2023)
+```{r fig calc overall mean for subgroups only fellows 2020 to 2023}
+
+rbind(df_list20$`Any Collaboration`, df_list21$`Any Collaboration`, df_list22$`Any Collaboration`, df_list23$`Any Collaboration`) %>%
+  filter(role!="Faculty Mentor") %>%
+  group_by(urm) %>%
+  summarise(deg_mean=round(mean(degree, na.rm=TRUE), 1)) %>%
+  ggplot(aes(x=urm, y=deg_mean, fill=urm)) +
+  geom_col(stat="identity", width = 0.6) +
+  scale_fill_manual(values=c("#044444", "#cb5c04")) +
+  theme(legend.position = "none") +
+  geom_text(aes(label = paste0(deg_mean, " Ties")), color="white", vjust = 2) +
+  labs(x ="Fellow's URM Status", y = "Degree (Network average 2020-2023)")
+
+ggsave("Average-degree-by-URM-status-2020-2023.png")
+```
+
+### Avg Degree by URM status compare (2022 and 2023)
+```{r fig calc overall mean for subgroups only fellows compare 2022 to 2023}
+
+dplyr::bind_rows(list("2022"=df_list22$`Any Collaboration`, "2023"=df_list23$`Any Collaboration`), .id = 'year') %>%
+  filter(role!="Faculty Mentor") %>%
+  group_by(urm, year) %>%
+  summarise(deg_mean=round(mean(degree, na.rm=TRUE), 1)) %>%
+  ggplot(aes(x=urm, y=deg_mean, fill=year)) +
+  geom_col(stat="identity", width = 0.6, position=position_dodge()) +
+  scale_fill_manual(values=c("#044444", "#cb5c04")) +
+  theme(legend.position = "bottom") +
+  geom_text(aes(label = paste0(deg_mean, " Ties")), color="white", vjust = 2, position = position_dodge2(width = 0.5, preserve = "single")) +
+  labs(x ="Fellow's URM Status", y = "Degree (Network Average)")
+
+ggsave("Average-degree-by-URM-status-compare-2022-2023.png")
+```
+
+```{r calcs for subgroups only fellows}
+
+subgroup_fun_fellows<- function(x, ...){
+  x %>%
+    filter(role!="Faculty Mentor") %>%
+  group_by_(..., .drop = TRUE) %>%
+    summarise(deg_mean=round(mean(degree, na.rm=TRUE), 1), 
+              deg_median=median(degree, na.rm=TRUE), 
+              deg_range=paste0(min(degree), ",", max(degree))
+    )
+}
+
+#2020
+disease_stats20_fel<- lapply(df_list20, subgroup_fun_fellows, "disease")
+discipline_stats20_fel<- lapply(df_list20, subgroup_fun_fellows, "discipline")
+urm_stats20_fel<- lapply(df_list20, subgroup_fun_fellows, "urm")
+
+#2021
+disease_stats21_fel<- lapply(df_list21, subgroup_fun_fellows, "disease")
+discipline_stats21_fel<- lapply(df_list21, subgroup_fun_fellows, "discipline")
+urm_stats21_fel<- lapply(df_list21, subgroup_fun_fellows, "urm")
+
+#2022
+disease_stats22_fel<- lapply(df_list22, subgroup_fun_fellows, "disease")
+discipline_stats22_fel<- lapply(df_list22, subgroup_fun_fellows, "discipline")
+urm_stats22_fel<- lapply(df_list22, subgroup_fun_fellows, "urm")
+
+#2023
+disease_stats23_fel<- lapply(df_list23, subgroup_fun_fellows, "disease")
+discipline_stats23_fel<- lapply(df_list23, subgroup_fun_fellows, "discipline")
+urm_stats23_fel<- lapply(df_list23, subgroup_fun_fellows, "urm")
+
+```
+
+## 2020 {.tabset .tabset-pills}
+### Any Collaboration {.tabset .tabset-pills}
+#### Disease
+```{r}
+
+table_fun_groups(
+  disease_stats20_fel$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+
+table_fun_groups(
+  discipline_stats20_fel$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+
+table_fun_groups(
+  urm_stats20_fel$'Any Collaboration'
+)
+```
+
+
+## 2021 {.tabset .tabset-pills}
+### Any Collaboration {.tabset .tabset-pills}
+#### Disease
+```{r}
+
+table_fun_groups(
+  disease_stats21_fel$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+
+table_fun_groups(
+  discipline_stats21_fel$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+
+table_fun_groups(
+  urm_stats21_fel$'Any Collaboration'
+)
+```
+
+## 2022 {.tabset .tabset-pills}
+### Any Collaboration {.tabset .tabset-pills}
+#### Disease
+```{r}
+
+table_fun_groups(
+  disease_stats22_fel$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+
+table_fun_groups(
+  discipline_stats22_fel$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+
+table_fun_groups(
+  urm_stats22_fel$'Any Collaboration'
+)
+```
+
+## 2023 {.tabset .tabset-pills}
+### Any Collaboration {.tabset .tabset-pills}
+#### Disease
+```{r}
+
+table_fun_groups(
+  disease_stats23_fel$'Any Collaboration'
+)
+```
+
+#### Discipline
+```{r}
+
+table_fun_groups(
+  discipline_stats23_fel$'Any Collaboration'
+)
+```
+
+#### URM status
+```{r}
+
+table_fun_groups(
+  urm_stats23_fel$'Any Collaboration'
+)
+```
+
+# Network Visualtization
+## By Role
+For network visualization, plots feature nodes that are sized by `degree` and `color` by role in IS2. For years, this refers to the year of data, not to a specific cohort. For example, 2023 tabs will include all 2020, 2021, and 2022 cohort + mentors.
+
+```{r}
+#rescale for vertex size
+rescale_fun<- function(nchar, low, high) {
+  min_d<- min(nchar)
+  max_d<- max(nchar)
+  rscl<- ((high-low) * (nchar-min_d))/ (max_d-min_d)+low
+  rscl
+}
+
+
+# with IDS
+#plot/graph nodes by degree function
+plot_deg_role_id <- function(x, y){
+  role= c("2020 Fellow", "2021 Fellow", "2022 Fellow", "Faculty Mentor")
+color_pal= c("#044444", "#cb5c04","#168991",  "#c2d3d3")
+  plot(x, edge.color="Light Gray", vertex.label.cex=0.5, vertex.label.dist=1, vertex.color=V(x)$role_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
+  legend("bottomleft", legend=role, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+}
+
+#Without IDs
+plot_deg_role <- function(x, y){
+  role= c("2020 Fellow", "2021 Fellow", "2022 Fellow", "Faculty Mentor")
+color_pal= c("#044444", "#cb5c04","#168991",  "#c2d3d3")
+  plot(x, edge.color="Light Gray", vertex.label=NA, vertex.color=V(x)$role_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
+  legend("bottomleft", legend=role, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+}
+```
+
+
+### Contact {.tabset .tabset-pills}
+#### 2020
+```{r}
+plot_deg_role(net_list2020$contact2020net, "2020 Contact")
+```
+
+#### 2021
+```{r}
+plot_deg_role(net_list2021$contact2021net, "2021 Contact")
+```
+
+#### 2022
+```{r}
+plot_deg_role(net_list2022$contact2022net, "2022 Contact")
+```
+
+#### 2023
+```{r}
+plot_deg_role(net_list2023$contact2023net, "2023 Contact")
+```
+
+### Collaboration {.tabset .tabset-pills}
+#### 2020 {.tabset .tabset-pills}
+##### Research
+```{r}
+plot_deg_role(net_list2020$research2020net, "2020 Research")
+```
+
+##### Manuscript
+```{r}
+plot_deg_role(net_list2020$manuscript2020net, "2020 Manuscript")
+```
+
+##### Grant
+```{r}
+plot_deg_role(net_list2020$grant2020net, "2020 Grant")
+```
+
+##### Teach
+```{r}
+plot_deg_role(net_list2020$teach2020net, "2020 Teach")
+```
+
+##### Present
+```{r}
+plot_deg_role(net_list2020$present2020net, "2020 Present")
+```
+
+##### Any Collaboration Combined
+```{r}
+plot_deg_role(net_list2020$anycoll2020net, "2020 Any Collaboration Combined")
+```
+
+#### 2021 {.tabset .tabset-pills}
+
+##### Research
+```{r}
+plot_deg_role(net_list2021$research2021net, "2021 Research")
+```
+
+##### Manuscript
+```{r}
+plot_deg_role(net_list2021$manuscript2021net, "2021 Manuscript")
+```
+
+##### Grant
+```{r}
+plot_deg_role(net_list2021$grant2021net, "2021 Grant")
+```
+
+##### Teach
+```{r}
+plot_deg_role(net_list2021$teach2021net, "2021 Teach")
+```
+
+##### Present
+```{r}
+plot_deg_role(net_list2021$present2021net, "2021 Present")
+```
+
+##### Any Collaboration Combined
+```{r}
+plot_deg_role(net_list2021$anycoll2021net, "2021 Any Collaboration Combined")
+```
+
+#### 2022 {.tabset .tabset-pills}
+
+##### Research
+```{r}
+plot_deg_role(net_list2022$research2022net, "2022 Research")
+```
+
+##### Manuscript
+```{r}
+plot_deg_role(net_list2022$manuscript2022net, "2022 Manuscript")
+```
+
+##### Grant
+```{r}
+plot_deg_role(net_list2022$grant2022net, "2022 Grant")
+```
+
+##### Teach
+```{r}
+plot_deg_role(net_list2022$teach2022net, "2022 Teach")
+```
+
+##### Present
+```{r}
+plot_deg_role(net_list2022$present2022net, "2022 Present")
+```
+
+##### Any Collaboration Combined
+```{r}
+plot_deg_role(net_list2022$anycoll2022net, "2022 Any Collaboration Combined")
+```
+
+#### 2023 {.tabset .tabset-pills}
+
+##### Research
+```{r}
+plot_deg_role(net_list2023$research2023net, "2023 Research")
+```
+
+##### Manuscript
+```{r}
+plot_deg_role(net_list2023$manuscript2023net, "2023 Manuscript")
+```
+
+##### Grant
+```{r}
+plot_deg_role(net_list2023$grant2023net, "2023 Grant")
+```
+
+##### Teach
+```{r}
+plot_deg_role(net_list2023$teach2023net, "2023 Teach")
+```
+
+##### Present
+```{r}
+plot_deg_role(net_list2023$present2023net, "2023 Present")
+```
+
+##### Any Collaboration Combined
+```{r}
+plot_deg_role(net_list2023$anycoll2023net, "2023 Any Collaboration Combined")
+```
+
+### Mentoring {.tabset .tabset-pills}
+
+#### 2020
+```{r}
+role= c("2020 Fellow", "2021 Fellow", "2022 Fellow", "Faculty Mentor")
+color_pal= c("#044444", "#cb5c04","#168991",  "#c2d3d3")
+
+plot(net_list2020$mentor2020net, edge.color="Light Gray", edge.arrow.size=.5, vertex.label=NA, vertex.color=V(net_list2020$mentor2020net)$role_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(net_list2020$mentor2020net), 5, 15), layout=layout_components, main="Mentoring 2020")
+  legend("bottomleft", legend=role, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+```
+
+#### 2021
+```{r}
+plot(net_list2021$mentor2021net, edge.color="Light Gray", edge.arrow.size=.5, vertex.label=NA, vertex.color=V(net_list2021$mentor2021net)$role_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(net_list2021$mentor2021net), 5, 15), layout=layout_components, main="Mentoring 2021")
+  legend("bottomleft", legend=role, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+```
+
+#### 2022
+```{r}
+plot(net_list2022$mentor2022net, edge.color="Light Gray", edge.arrow.size=.5, vertex.label=NA, vertex.color=V(net_list2022$mentor2022net)$role_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(net_list2022$mentor2022net), 5, 15), layout=layout_components, main="Mentoring 2022")
+  legend("bottomleft", legend=role, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+```
+
+#### 2023
+```{r}
+plot(net_list2023$mentor2023net, edge.color="Light Gray", edge.arrow.size=.5, vertex.label=NA, vertex.color=V(net_list2023$mentor2023net)$role_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(net_list2023$mentor2023net), 5, 15), layout=layout_components, main="Mentoring 2023")
+  legend("bottomleft", legend=role, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+```
+
+## By Disease Focus
+```{r}
+#without IDs, by disease_focus (color) and role (shape)
+plot_deg_disease <- function(x, y){
+  disease= c("Diabetes", "Cancer", "Overlapping risk factors", "Other")
+color_pal= c("#cb5c04", "#044444","#168991",  "#813A03")
+  plot(x, edge.color="Light Gray", vertex.label=NA, vertex.color=V(x)$disease_color, 
+       vertex.shape=ifelse(V(x)$role=="Faculty Mentor", "circle", "square"), vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
+  legend("bottomleft", legend=disease, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
+}
+```
+
+### Any Collaboration {.tabset .tabset-pills}
+
+Here, colors represent `disease focus` and shapes denote `role` (Faculty Mentor=Circle, Scholar=Square).
+
+Size represents `degree`.
+
+#### 2020
+```{r}
+plot_deg_disease(net_list2020$anycoll2020net, "2020 Any Collaboration Combined by Disease Focus")
+```
+
+#### 2021
+```{r}
+plot_deg_disease(net_list2021$anycoll2021net, "2021 Any Collaboration Combined by Disease Focus")
+```
+
+#### 2022
+```{r}
+plot_deg_disease(net_list2022$anycoll2022net, "2022 Any Collaboration Combined by Disease Focus")
+```
+
+#### 2023
+```{r}
+plot_deg_disease(net_list2023$anycoll2023net, "2023 Any Collaboration Combined by Disease Focus")
+```
+
+```{r optional top ten and isolates add}
+#top_ten <- c('top-ten-and-isolates.Rmd')
+top_ten <- NULL
+```
+
+```{r test-main, child = top_ten}
+```
