@@ -29,13 +29,8 @@ library(qualtRics) #read Qualtrics data
 ```
 
 # Survey data
-
-When I pull in the data, right away, I go ahead and remove any "preview" surveys done during testing. Consider removing any other data that doesn't belong (e.g. those that declined to give consent, not eligible, etc.)
-
-I load survey data first since we'll use some of it's info in the attributes section.
 ```{r}
-survey<- read_survey("SNA-template-survey-fellow.csv") %>%
-  filter(Status!="Survey Preview") %>% #don't include test surveys
+survey<- read_survey("Example survey/Example-SNA-survey-data.csv") %>%
   mutate(full_name=paste0(RecipientLastName, ", ", RecipientFirstName)) %>%
   select(ID, SortID, full_name, position:connect_rating) %>%
   arrange(SortID)
@@ -50,7 +45,7 @@ We have a few sources of attribute data. One is assigned info from admin data. T
 Since this is test data, we have few missing data. In reality, even if you get an 80% response to an SN survey (still shooting high), you'd be missing 20% of your attribute data.
 ```{r}
 
-qual_panel<- read.csv('../Qualtrics-contact-list.csv') %>%
+qual_panel<- read.csv('Qualtrics-contact-list.csv') %>%
   select(ID, SortID, referred, location) #Just need SortId for merging and any variables that are NOT in survey
 
 
