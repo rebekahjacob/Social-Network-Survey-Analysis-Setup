@@ -1,0 +1,609 @@
+---
+title: "SNA Example Cleaning Template- Fellow"
+author: "Rebekah Jacob"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+# Introduction
+
+This serves as documentation to the cleaning and management of the social network survey featuring fictional "Fellows" from a research fellowship program.
+
+Libraries
+```{r}
+library(tidyverse) #Data management
+library(DT) #html tables to display data
+library(qualtRics) #read Qualtrics data
+#library(igraph) making a note here that we'll add more later
+```
+
+# Survey data
+
+When I pull in the data, right away, I go ahead and remove any "preview" surveys done during testing. Consider removing any other data that doesn't belong (e.g. those that declined to give consent, not eligible, etc.)
+
+I load survey data first since we'll use some of it's info in the attributes section.
+```{r}
+survey<- read_survey("SNA-template-survey-fellow.csv") %>%
+  filter(Status!="Survey Preview") %>% #don't include test surveys
+  mutate(full_name=paste0(RecipientLastName, ", ", RecipientFirstName)) %>%
+  select(ID, SortID, full_name, position:connect_rating) %>%
+  arrange(SortID)
+
+survey
+```
+
+# Attributes
+
+We have a few sources of attribute data. One is assigned info from admin data. The other is anything from surveying. A note to remember that surveys will likely have missing data if people didn't complete certain questions and/or if not a 100% response rate. We need to make sure to include SortID. This helps us take out attributes from anyone that wasn't included in that year's survey.
+
+Since this is test data, we have few missing data. In reality, even if you get an 80% response to an SN survey (still shooting high), you'd be missing 20% of your attribute data.
+```{r}
+
+qual_panel<- read.csv('../Qualtrics-contact-list.csv') %>%
+  select(ID, SortID, referred, location) #Just need SortId for merging and any variables that are NOT in survey
+
+
+#from survey data
+survey_att<- survey %>%
+  select(ID, position, connect_rating) #this is where you pull out any variables that are NOT network questions (people names)
+
+
+atts<- list(qual_panel, survey_att) %>%
+  reduce(full_join, by="ID") %>%
+  filter(!is.na(SortID)) #only keep those with a sort order because those are the only ones in 2020's survey
+
+head(atts)
+```
+
+## Recodes for groups
+
+Within the attribute file, we may be interested in grouping some categories ahead of time if we know that we need them for stats and visualizations later.
+
+For example, I'm going to go ahead and collapse the `connect_rating` varible to a binary variable: *"Easy"* vs. *"Difficult"*. 
+```{r}
+atts<- atts %>%
+  mutate(connect_rating_bi=case_when(
+    grepl("difficult", connect_rating)~"Difficult",
+    grepl("easy", connect_rating)~"Easy",
+  ))
+
+atts %>%
+  group_by(connect_rating_bi) %>%
+  tally()
+```
+
+**LEFT OFF HERE**
+
+
+For discipline, the decision is collapse Psychology, Social Sciences, and Social Work into "other".
+```{r}
+att2020 %>%
+  group_by(discipline) %>%
+  tally()
+```
+
+Okay that looks like it worked ok.
+```{r}
+discipline_others<- c("Social Sciences", "Social Work", "Psychology")
+
+att2020<- att2020 %>%
+  mutate(discipline=case_when(discipline %in% discipline_others ~"Other",
+    TRUE~discipline))
+
+att2020 %>%
+  group_by(discipline) %>%
+  tally()
+```
+
+
+For affiliation, lets recode to reduce number of groups, not identify specific people, and give people "other affiliation" distinction.
+```{r}
+att2020 %>%
+  group_by(affiliation_all) %>%
+  tally()
+```
+Now we can see this change.
+```{r}
+att2020<- att2020 %>%
+  mutate(affiliation_5=case_when(
+    is.na(affiliation_all)~"Other affiliation",
+    grepl("P50", affiliation_all) & grepl("CDTR", affiliation_all)~ "Multiple of P50/CDTR/VA",
+    grepl("VA", affiliation_all) & grepl("CDTR", affiliation_all)~ "Multiple of P50/CDTR/VA",
+    grepl("P50", affiliation_all) & grepl("VA", affiliation_all)~ "Multiple of P50/CDTR/VA",
+    TRUE~affiliation_all))
+
+att2020 %>%
+  group_by(affiliation_5) %>%
+  tally() %>%
+  arrange(desc(n))
+```
+
+
+Lets create one category that combines role and cohort. We'll call it 'role'. I'm building out code for future cohorts as well.
+
+Here's what the new variable looks like.
+```{r}
+att2020<- att2020 %>%
+  mutate(role=case_when(
+    cohort_year==2020~"2020 Fellow",
+    cohort_year==2021~"2021 Fellow",
+    cohort_year==2022~"2022 Fellow",
+    cohort_year==2023~"2023 Fellow",
+    role_IS2=="Faculty"~"Faculty Mentor"
+  ))
+
+att2020 %>%
+  group_by(role) %>%
+  tally()
+```
+
+
+## Adding colors
+
+At this point, we can decide on a few variables that we might want to show on visualizations.
+
+For this particular network, it will be important to visually see the cohorts and the mentors/faculty. We could technically include this as 'color' attribute and igraph will always know to use this when graphing, but since I would like the decision to be intential, I will create a couple new variables that start with their variable name followed by '_color' to keep them straight from the original variable.
+
+Note that I will need to add additional cohorts in the future, but this will only have 2020 for now, but I'm going to go ahead and build out the code for later anyway.
+
+```{r}
+att2020<- att2020 %>%
+  mutate(
+    role_color=case_when(
+      role=="2020 Fellow"~"#044444", #dark teal
+      role=="2021 Fellow"~"#cb5c04", #orange
+      role=="2022 Fellow"~"#168991", #teal
+      role=="2023 Fellow"~"#813A03", #burnt orange
+      role=="Faculty Mentor"~"#c2d3d3"), #grey
+    discipline_color=case_when(
+      discipline=="Public Health"~"#044444", #dark teal
+      discipline=="Health Sciences"~"#cb5c04", #orange
+      discipline=="Other"~"#c2d3d3", #grey
+      discipline=="Health Systems, Service Administration"~"#168991"), #teal
+    disease_color=case_when(
+      DiseaseCategory_2022Update=="Cancer"~"#044444", #dark teal,
+      DiseaseCategory_2022Update=="Diabetes"~"#cb5c04", #orange
+      DiseaseCategory_2022Update=="Overlapping Risk Factors"~"#168991",#teal
+      DiseaseCategory_2022Update=="Other"~ "#813A03"#burnt orange
+    ),
+    cancer_color=case_when(
+      cancer=="Cancer focus"~"#cb5c04", #orange
+      cancer=="Other focus"~"#168991"), #teal
+    diabetes_color=case_when(
+      diabetes=="Diabetes focus"~"#044444", #dark teal
+      diabetes=="Other focus"~"#168991" #teal
+    )
+    )
+```
+
+
+## Save attribute file
+
+since we did quite a vit of work on this data, I'm going to save it as an Excel file so we can access it outside of this code. For example, we can easily use for quick descriptives later if we chose.
+```{r}
+openxlsx::write.xlsx(att2020, "IS2-network-attributes-2020.xlsx")
+```
+
+
+# Network data
+
+We've already loaded the survey data above in order to get attribute data, etc. Now let's pull out the network data from the survey.
+The survey data have 32 respondents, but our attribute data is for 33.
+```{r}
+nrow(att2020)
+nrow(survey2020)
+```
+
+## Adding missing rows
+
+Since not everyone completed the survey (not 100% response), we need to add in rows for those that didn't complete. We have to use the attribute data to do this (which includes ALL IDs).
+
+**We do this BEFORE we split out the separate activity networks**
+
+We're back to having 33 members, which is what we should have if we had a 100% response.
+```{r}
+survey2020<- survey2020 %>%
+  select(-FullName, -ProgramRole, -CohortYear, -Q4) %>%
+  right_join(att2020 %>%
+               select(ID, SortID),
+             by=c("ID","SortID")) %>%
+  arrange(SortID)
+
+nrow(survey2020)
+```
+
+## Recode to numeric
+
+Here are the basic transformations here:
+
+**Contact**: Q5 (fellows) and Q6 (faculty) contact:
+
+- I don't know this person ~ NA
+- I know who this person is but we have had no contact ~ NA
+- I have had contact with this person yearly ~ 1
+- I have had contact with this person quarterly ~ 2
+- I have had contact with this person monthly ~ 3
+
+**Collaboration**: Q7
+
+These will not be weighted. They will be used later to break out separate activity networks. So for now, I will just assign 1 to each nomination across the collaboration variables.
+
+
+**Mentorship**: Q8
+
+This will be a directed network. So we have to deal with direction. And we will separate them into mentor OUT and mentor IN networks. For now, I will assign 1 for each nomination so I can treat them as separate networks later.
+
+
+To start, I'm going to name vars of interest in list so that I can use them now and later. Then I can pass the function to the list of vars.
+```{r}
+contact_vars<- survey2020 %>%
+  select(starts_with("Q5")| starts_with("Q6")) %>%
+  names()
+
+recode_freq_fun<- function(x){
+  case_when(
+    x=='I have had contact with this person yearly' ~ 1,
+    x=='I have had contact with this person quarterly' ~ 2,
+    x=='I have had contact with this person monthly' ~ 3
+  )
+}
+
+
+
+survey2020<- survey2020 %>%
+  mutate_at(contact_vars, recode_freq_fun)
+```
+
+
+```{r}
+collab_vars<- survey2020 %>%
+  select(starts_with("Q7")) %>%
+  names()
+
+recode_nom_fun<- function(x){
+  as.numeric(case_when(
+    x=="Engaged in a joint research project"~1,
+    x=="Published or wrote a scholarly manuscript"~1,
+    x=="Engaged in joint grant writing"~1,
+    x=="Co-taught a course or training"~1,
+    x=="Presented research"~1,
+    x=="I did not engage in any of these activities"~1, #we won't select this as a network, but just keeping it for now
+    x=="They mentored me"~1, #combining into just one function to include mentor nominations
+    x=="I mentored them"~1 #combining into just one function to include mentor nominations
+  ))
+}
+
+survey2020<- survey2020 %>%
+  mutate_at(collab_vars, recode_nom_fun)
+
+head(survey2020 %>%
+  select(collab_vars))
+```
+
+```{r}
+mentor_vars<- survey2020 %>%
+  select(starts_with("Q8")) %>%
+  names()
+
+survey2020<- survey2020 %>%
+  mutate_at(mentor_vars, recode_nom_fun)
+```
+
+## Matrices
+
+Now I can separate each df into separate activity network
+
+Contact
+```{r}
+contact2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select(contact_vars, -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+
+```
+
+Research
+```{r}
+research2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q7") & ends_with("1")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+
+head(
+  survey2020 %>%
+  select(starts_with("Q7") & ends_with("2"))
+)
+```
+
+Manuscript
+```{r}
+manuscript2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q7") & ends_with("2")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+```
+
+Grant
+```{r}
+grant2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q7") & ends_with("3")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+```
+
+Teach
+```{r}
+teach2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q7") & ends_with("4")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+```
+
+Present
+```{r}
+present2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q7") & ends_with("5")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+```
+
+Mentor IN (I mentored them)
+```{r}
+mentorin2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q8") & ends_with("1")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+```
+
+Mentor OUT (They mentored me)
+```{r}
+mentorout2020<- survey2020 %>%
+  arrange(SortID) %>%
+  select((starts_with("Q8") & ends_with("2")), -(c(ID, SortID))) %>%
+  as.matrix() %>%
+  `colnames<-`(att2020$ID) %>%
+  `rownames<-`(att2020$ID)
+```
+
+## Symmetrize
+
+For nondirected networks (contact and collab activites) we will make connection symmetric (if A connected to B, then B is connected to A)
+
+For the contact network, for tie breakers, we'll take the lower rating. If A says monthly and B says yearly, we go with a yearly connection between A and B.
+
+Then we replace all NA values with 0.
+
+Here's a function to do all.
+```{r}
+sym_fun<- function(mat){
+  tmat<- t(mat) #transpose
+  symat<- pmin(mat, tmat, na.rm=TRUE) #parallel minimum function and if NA, then take other person's rating
+  symat %>%
+  replace(., is.na(.), 0) #replace all NAs with 0's so not missing
+}
+```
+
+```{r}
+contact2020<- sym_fun(contact2020)
+```
+
+```{r}
+research2020<- sym_fun(research2020)
+```
+
+```{r}
+manuscript2020<- sym_fun(manuscript2020)
+```
+
+```{r}
+grant2020<- sym_fun(grant2020)
+```
+
+```{r}
+teach2020<- sym_fun(teach2020)
+```
+
+```{r}
+present2020<- sym_fun(present2020)
+```
+
+Here I'm creating one network to summarize *any* collaboration activity. We add the matrices and then convert any tie to 1 (otherwise, if folks had multiple connections, it would be larger than 1).
+```{r}
+anycoll2020<- research2020+manuscript2020+grant2020+teach2020+present2020
+
+anycoll2020[anycoll2020 > 0] <-1
+```
+
+
+For mentoring networks, we will not symmetrize, but we we still need to replace NAs with 0's.
+
+The Mentored out network needs to be transposed in order for targets to go in the proper direction. 
+```{r}
+mentorin2020<- mentorin2020 %>%
+  replace(., is.na(.), 0) #replace all NAs with 0's so not missing
+
+mentorout2020<- mentorout2020 %>%
+  t() %>% #transpose first
+  replace(., is.na(.), 0) #replace all NAs with 0's so not missing
+
+
+mentor2020<- mentorout2020 + mentorin2020 #currently this is weighted, but we'll take care of that when we convert.
+
+
+mentor2020[mentor2020 > 0] <-1
+
+head(mentor2020)
+```
+
+
+# Convert to network object
+
+Now we can load igraph packages. Also, pay attention to the options for when each is being converted.
+```{r}
+library(igraph)
+```
+
+Contact
+```{r}
+contact2020net<- graph_from_adjacency_matrix(contact2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = TRUE, #Contact has weights, but not other networks in this set
+                                              diag = FALSE) #do not want loops
+
+contact2020net
+```
+Checking that node name matches our sortID, they do and they are character format.
+```{r}
+vertex_attr(contact2020net, "name")
+```
+
+Mentor
+```{r}
+mentor2020net<- graph_from_adjacency_matrix(mentor2020,
+                                              mode="directed", #this one is directed
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+mentor2020net
+```
+
+```{r}
+anycoll2020net<- graph_from_adjacency_matrix(anycoll2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+anycoll2020net
+```
+
+
+Research
+```{r}
+research2020net<- graph_from_adjacency_matrix(research2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+research2020net
+```
+
+Manuscript
+```{r}
+manuscript2020net<- graph_from_adjacency_matrix(manuscript2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+manuscript2020net
+```
+Grant
+```{r}
+grant2020net<- graph_from_adjacency_matrix(grant2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+grant2020net
+```
+
+Teach
+```{r}
+teach2020net<- graph_from_adjacency_matrix(teach2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+teach2020net
+```
+Present
+```{r}
+present2020net<- graph_from_adjacency_matrix(present2020,
+                                              mode="undirected", #Symmetrized
+                                              weighted = NULL, #no weights
+                                              diag = FALSE) #do not want loops
+
+present2020net
+```
+
+
+# Add attributes
+
+Now we want to add some attributes to our graphs. Since we have quite a few and I don't want to have to repeat the process for each, I'm going to attempt to save many lines of code and use functions.
+
+Add all of our new igraph objects to a list.
+```{r}
+#From Bobbi's code:
+NamedList<- function(...){
+  names<- as.list(substitute(list(...)))[-1L]
+  result<- list(...)
+  names(result) <- names
+  result
+}
+
+
+net_list2020<- NamedList(contact2020net, anycoll2020net, research2020net, manuscript2020net, grant2020net, teach2020net, present2020net, mentor2020net)
+```
+
+
+Function to add attributes.
+```{r}
+#from Bobbi's code:
+NodeAtts<- function(x){
+  add1<- set.vertex.attribute(x, "id", value=as.numeric(att2020$ID))
+  add2<- set.vertex.attribute(add1, "discipline", value=att2020$discipline)
+  add3<- set.vertex.attribute(add2, "role", value = att2020$role)
+  add4<- set.vertex.attribute(add3, "urm", value = att2020$URM_status)
+  add5<- set.vertex.attribute(add4, "affiliation", value=att2020$affiliation_5)
+  add6<- set.vertex.attribute(add5, "cancer", value=att2020$cancer)
+  add7<- set.vertex.attribute(add6, "diabetes", value=att2020$diabetes)
+  add8<- set.vertex.attribute(add7, "disease", value=att2020$DiseaseCategory_2022Update)
+  add9<- set.vertex.attribute(add8, "role_color", value=att2020$role_color)
+  add10<- set.vertex.attribute(add9, "discipline_color", value=att2020$discipline_color)
+  add11<- set.vertex.attribute(add10, "disease_color", value=att2020$disease_color)
+  add12<- set.vertex.attribute(add11, "cancer_color", value=att2020$cancer_color)
+  add13<- set.vertex.attribute(add12, "diabetes_color", value=att2020$diabetes_color)
+  add14<- set.vertex.attribute(add13, "name_full", value=att2020$name_full)
+}
+```
+
+```{r}
+net_list2020<- lapply(net_list2020, NodeAtts)
+```
+
+Here's an example now that we've added node attributes.
+```{r}
+
+summary(net_list2020$contact2020net)
+```
+
+Now we save the full net list package as .rdata so we can access for analysis and visualization.
+I'm making sure to package it with the year so we can differentiate.
+```{r}
+saveRDS(net_list2020, "net_list2020.rds")
+```
+
