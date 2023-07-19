@@ -1,0 +1,27 @@
+ID,SortID,referred,location,position,connect_rating,full_name,connect_rating_bi,referred_color,location_color,position_color,connect_rating_bi_color
+1001,1,Friend,US,NA,NA,NA,NA,#15d4f7,#f96e26,NA,NA
+1002,2,Coworker,US,NA,NA,NA,NA,#5e53f7,#f96e26,NA,NA
+1003,3,Coworker,US,NA,NA,NA,NA,#5e53f7,#f96e26,NA,NA
+1004,4,Coworker,Mex,Fellow,Extremely difficult,"Brown, D",Difficult,#5e53f7,#15d4f7,#15d4f7,#f96e26
+1005,5,Friend,Mex,Fellow,Neither easy nor difficult,"Jones, E",Difficult,#15d4f7,#15d4f7,#15d4f7,#f96e26
+1006,6,Boss,US,Fellow,Somewhat easy,"Miller, F",Easy,#f96e26,#f96e26,#15d4f7,#282728
+1007,7,Boss,US,Fellow,Somewhat easy,"Davis, G",Easy,#f96e26,#f96e26,#15d4f7,#282728
+1008,8,Boss,US,Fellow,Somewhat easy,"Garcia, H",Easy,#f96e26,#f96e26,#15d4f7,#282728
+1009,9,Friend,Mex,Mentor,Neither easy nor difficult,"Rodriguez, I",Difficult,#15d4f7,#15d4f7,#f96e26,#f96e26
+1010,10,Friend,Mex,Fellow,Neither easy nor difficult,"Wilson, J",Difficult,#15d4f7,#15d4f7,#15d4f7,#f96e26
+1011,11,Friend,Mex,Fellow,Somewhat easy,"Martinez, K",Easy,#15d4f7,#15d4f7,#15d4f7,#282728
+1012,12,Boss,US,Mentor,Extremely easy,"Anderson, L",Easy,#f96e26,#f96e26,#f96e26,#282728
+1013,13,Boss,US,Fellow,Somewhat easy,"Taylor, M",Easy,#f96e26,#f96e26,#15d4f7,#282728
+1014,14,Boss,US,Fellow,Neither easy nor difficult,"Thomas, N",Difficult,#f96e26,#f96e26,#15d4f7,#f96e26
+1015,15,Coworker,US,Fellow,Extremely easy,"Hernandez, O",Easy,#5e53f7,#f96e26,#15d4f7,#282728
+1016,16,Coworker,US,Fellow,Neither easy nor difficult,"Moore, P",Difficult,#5e53f7,#f96e26,#15d4f7,#f96e26
+1017,17,Friend,Canada,Fellow,Somewhat easy,"Martin, Q",Easy,#15d4f7,#5e53f7,#15d4f7,#282728
+1018,18,Coworker,Canada,Mentor,Somewhat difficult,"Jackson, R",Difficult,#5e53f7,#5e53f7,#f96e26,#f96e26
+1019,19,Boss,Canada,Fellow,Extremely easy,"Thompson, S",Easy,#f96e26,#5e53f7,#15d4f7,#282728
+1020,20,Coworker,Canada,Fellow,Neither easy nor difficult,"White, T",Difficult,#5e53f7,#5e53f7,#15d4f7,#f96e26
+1021,21,Boss,Canada,Fellow,Somewhat difficult,"Lopez, U",Difficult,#f96e26,#5e53f7,#15d4f7,#f96e26
+1022,22,Friend,Canada,Mentor,Extremely easy,"Lee, V",Easy,#15d4f7,#5e53f7,#f96e26,#282728
+1023,23,Friend,Canada,Mentor,Extremely easy,"Gonzalez, W",Easy,#15d4f7,#5e53f7,#f96e26,#282728
+1024,24,Friend,Canada,Fellow,Somewhat difficult,"Harris, X",Difficult,#15d4f7,#5e53f7,#15d4f7,#f96e26
+1025,25,Coworker,Canada,Fellow,Extremely difficult,"Clark, Y",Difficult,#5e53f7,#5e53f7,#15d4f7,#f96e26
+1026,26,Coworker,Canada,Fellow,Somewhat easy,"Lewis, Z",Easy,#5e53f7,#5e53f7,#15d4f7,#282728
