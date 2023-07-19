@@ -437,7 +437,7 @@ Function to add attributes.
 ```{r}
 #from Bobbi's code:
 NodeAtts<- function(x){
-  add1<- set.vertex.attribute(x, "full_name", value=as.numeric(atts$full_name))
+  add1<- set.vertex.attribute(x, "full_name", value=atts$full_name)
   add2<- set.vertex.attribute(add1, "position_color", value=atts$position_color)
   add3<- set.vertex.attribute(add2, "position", value=atts$position)
   add4<- set.vertex.attribute(add3, "location_color", value=atts$location_color)
