@@ -67,7 +67,7 @@ rescale_fun<- function(nchar, low, high) {
 plot_deg_position_id <- function(x, y){
   position= c("Fellow", "Mentor")
 color_pal= c("#15d4f7", "#f96e26")
-  plot(x, edge.color="Light Gray", vertex.label.cex=0.5, vertex.label.dist=1, vertex.color=V(x)$position_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
+  plot(x, edge.color="Light Gray", vertex.label=V(x)$full_name, vertex.label.cex=0.5, vertex.label.dist=1, vertex.color=V(x)$position_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
   legend("bottomleft", legend=position, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
 }
 
@@ -138,7 +138,7 @@ rescale_fun<- function(nchar, low, high) {
 plot_deg_location_id <- function(x, y){
   location= c("US", "Mex", "Canada")
 color_pal= c("#f96e26", "#15d4f7", "#5e53f7")
-  plot(x, edge.color="Light Gray", vertex.label.cex=0.5, vertex.label.dist=1, vertex.color=V(x)$location_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
+  plot(x, edge.color="Light Gray", vertex.label=V(x)$full_name, vertex.label.cex=0.5, vertex.label.dist=1, vertex.color=V(x)$location_color, vertex.frame.color=NA, vertex.size=rescale_fun(degree(x), 5, 15), layout=layout_components, main=y)
   legend("bottomleft", legend=location, col=color_pal, bty="n", pch=20 , pt.cex = 3, cex = .8 , horiz = FALSE)
 }
 
