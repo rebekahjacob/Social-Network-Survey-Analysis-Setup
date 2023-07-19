@@ -45,7 +45,7 @@ We have a few sources of attribute data. One is assigned info from admin data. T
 Since this is test data, we have few missing data. In reality, even if you get an 80% response to an SN survey (still shooting high), you'd be missing 20% of your attribute data.
 ```{r}
 
-qual_panel<- read.csv('Qualtrics-contact-list.csv') %>%
+qual_panel<- read_csv('Contacts/Qualtrics-contact-list.csv') %>%
   select(ID, SortID, referred, location) #Just need SortId for merging and any variables that are NOT in survey
 
 
@@ -78,106 +78,31 @@ atts %>%
   tally()
 ```
 
-**LEFT OFF HERE**
-
-
-For discipline, the decision is collapse Psychology, Social Sciences, and Social Work into "other".
-```{r}
-att2020 %>%
-  group_by(discipline) %>%
-  tally()
-```
-
-Okay that looks like it worked ok.
-```{r}
-discipline_others<- c("Social Sciences", "Social Work", "Psychology")
-
-att2020<- att2020 %>%
-  mutate(discipline=case_when(discipline %in% discipline_others ~"Other",
-    TRUE~discipline))
-
-att2020 %>%
-  group_by(discipline) %>%
-  tally()
-```
-
-
-For affiliation, lets recode to reduce number of groups, not identify specific people, and give people "other affiliation" distinction.
-```{r}
-att2020 %>%
-  group_by(affiliation_all) %>%
-  tally()
-```
-Now we can see this change.
-```{r}
-att2020<- att2020 %>%
-  mutate(affiliation_5=case_when(
-    is.na(affiliation_all)~"Other affiliation",
-    grepl("P50", affiliation_all) & grepl("CDTR", affiliation_all)~ "Multiple of P50/CDTR/VA",
-    grepl("VA", affiliation_all) & grepl("CDTR", affiliation_all)~ "Multiple of P50/CDTR/VA",
-    grepl("P50", affiliation_all) & grepl("VA", affiliation_all)~ "Multiple of P50/CDTR/VA",
-    TRUE~affiliation_all))
-
-att2020 %>%
-  group_by(affiliation_5) %>%
-  tally() %>%
-  arrange(desc(n))
-```
-
-
-Lets create one category that combines role and cohort. We'll call it 'role'. I'm building out code for future cohorts as well.
-
-Here's what the new variable looks like.
-```{r}
-att2020<- att2020 %>%
-  mutate(role=case_when(
-    cohort_year==2020~"2020 Fellow",
-    cohort_year==2021~"2021 Fellow",
-    cohort_year==2022~"2022 Fellow",
-    cohort_year==2023~"2023 Fellow",
-    role_IS2=="Faculty"~"Faculty Mentor"
-  ))
-
-att2020 %>%
-  group_by(role) %>%
-  tally()
-```
-
-
 ## Adding colors
 
 At this point, we can decide on a few variables that we might want to show on visualizations.
 
-For this particular network, it will be important to visually see the cohorts and the mentors/faculty. We could technically include this as 'color' attribute and igraph will always know to use this when graphing, but since I would like the decision to be intential, I will create a couple new variables that start with their variable name followed by '_color' to keep them straight from the original variable.
-
-Note that I will need to add additional cohorts in the future, but this will only have 2020 for now, but I'm going to go ahead and build out the code for later anyway.
-
+You can find all kinds of fun palettes online. I used [Huemint](https://huemint.com/brand-3/) for this scheme.
 ```{r}
-att2020<- att2020 %>%
+atts<- atts %>%
   mutate(
-    role_color=case_when(
-      role=="2020 Fellow"~"#044444", #dark teal
-      role=="2021 Fellow"~"#cb5c04", #orange
-      role=="2022 Fellow"~"#168991", #teal
-      role=="2023 Fellow"~"#813A03", #burnt orange
-      role=="Faculty Mentor"~"#c2d3d3"), #grey
-    discipline_color=case_when(
-      discipline=="Public Health"~"#044444", #dark teal
-      discipline=="Health Sciences"~"#cb5c04", #orange
-      discipline=="Other"~"#c2d3d3", #grey
-      discipline=="Health Systems, Service Administration"~"#168991"), #teal
-    disease_color=case_when(
-      DiseaseCategory_2022Update=="Cancer"~"#044444", #dark teal,
-      DiseaseCategory_2022Update=="Diabetes"~"#cb5c04", #orange
-      DiseaseCategory_2022Update=="Overlapping Risk Factors"~"#168991",#teal
-      DiseaseCategory_2022Update=="Other"~ "#813A03"#burnt orange
-    ),
-    cancer_color=case_when(
-      cancer=="Cancer focus"~"#cb5c04", #orange
-      cancer=="Other focus"~"#168991"), #teal
-    diabetes_color=case_when(
-      diabetes=="Diabetes focus"~"#044444", #dark teal
-      diabetes=="Other focus"~"#168991" #teal
+    referred_color=case_when(
+      referred=="Friend"~"#15d4f7",
+      referred=="Boss"~"#f96e26", 
+      referred=="Coworker"~"#5e53f7"),
+    
+    location_color=case_when(
+      location=="Mex"~"#15d4f7", 
+      location=="US"~"#f96e26",
+      location=="Canada"~"#5e53f7"), 
+    
+    position_color=case_when(
+      position=="Fellow"~"#15d4f7", 
+      position=="Mentor"~"#f96e26"), 
+
+    connect_rating_bi_color=case_when(
+      connect_rating_bi=="Easy"~"#282728",
+      connect_rating_bi=="Difficult"~"#f96e26" 
     )
     )
 ```
