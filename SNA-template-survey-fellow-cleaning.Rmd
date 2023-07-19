@@ -112,7 +112,7 @@ atts<- atts %>%
 
 since we did quite a bit of work on this data, I'm going to save it as an Excel file so we can access it outside of this code. For example, we can easily use for quick descriptives later if we chose.
 ```{r}
-#write_csv(atts, "Contacts/attribute-file.csv")
+write_csv(atts, "Contacts/attribute-file.csv")
 ```
 
 
