@@ -99,7 +99,7 @@ plot_deg_position(net_list$manuscriptnet, " Manuscript by position")
 
 #### Grant
 ```{r}
-plot_deg_position(net_list$grantnet, " Grant by position")
+plot_deg_position(net_list$grantnet, "Grant by position")
 ```
 
 #### Teach
