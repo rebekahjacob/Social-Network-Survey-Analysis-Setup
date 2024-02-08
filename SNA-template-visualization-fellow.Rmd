@@ -84,6 +84,7 @@ color_pal= c("#15d4f7", "#f96e26")
 ### Contact
 ```{r}
 plot_deg_position(net_list$contactnet, "Contact by position")
+ggsave("contact-by-position.png")
 ```
 
 ### Collaboration {.tabset .tabset-pills}
@@ -94,7 +95,7 @@ plot_deg_position(net_list$researchnet, "Research by position")
 
 #### Manuscript
 ```{r}
-plot_deg_position(net_list$manuscriptnet, " Manuscript by position")
+plot_deg_position(net_list$manuscriptnet, "Manuscript by position")
 ```
 
 #### Grant
@@ -104,17 +105,17 @@ plot_deg_position(net_list$grantnet, "Grant by position")
 
 #### Teach
 ```{r}
-plot_deg_position(net_list$teachnet, " Teach by position")
+plot_deg_position(net_list$teachnet, "Teach by position")
 ```
 
 #### Present
 ```{r}
-plot_deg_position(net_list$presentnet, " Present by position")
+plot_deg_position(net_list$presentnet, "Present by position")
 ```
 
 #### Any Collaboration Combined
 ```{r}
-plot_deg_position(net_list$anycollnet, " Any Collaboration Combined by position")
+plot_deg_position(net_list$anycollnet, "Any Collaboration Combined by position")
 ```
 
 
@@ -164,25 +165,25 @@ plot_deg_location(net_list$researchnet, "Research by location")
 
 #### Manuscript
 ```{r}
-plot_deg_location(net_list$manuscriptnet, " Manuscript by location")
+plot_deg_location(net_list$manuscriptnet, "Manuscript by location")
 ```
 
 #### Grant
 ```{r}
-plot_deg_location(net_list$grantnet, " Grant by location")
+plot_deg_location(net_list$grantnet, "Grant by location")
 ```
 
 #### Teach
 ```{r}
-plot_deg_location(net_list$teachnet, " Teach by location")
+plot_deg_location(net_list$teachnet, "Teach by location")
 ```
 
 #### Present
 ```{r}
-plot_deg_location(net_list$presentnet, " Present by location")
+plot_deg_location(net_list$presentnet, "Present by location")
 ```
 
 #### Any Collaboration Combined
 ```{r}
-plot_deg_location(net_list$anycollnet, " Any Collaboration combined by location")
+plot_deg_location(net_list$anycollnet, "Any Collaboration combined by location")
 ```
