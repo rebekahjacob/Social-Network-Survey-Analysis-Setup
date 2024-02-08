@@ -84,7 +84,8 @@ color_pal= c("#15d4f7", "#f96e26")
 ### Contact
 ```{r}
 plot_deg_position(net_list$contactnet, "Contact by position")
-ggsave("contact-by-position.png")
+ggsave("Network figures/contact-by-position.png")
+plot_deg_position(net_list$contactnet, "Contact by position")
 ```
 
 ### Collaboration {.tabset .tabset-pills}
