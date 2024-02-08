@@ -17,7 +17,9 @@ analyzing a social network survey.
   - Example Survey with 
       - .pdf full survey example
       - .csv sample survey data (from full survey example)
-      - .rmd sample survey data cleaning code *coming soon*
+      - .rmd sample survey data cleaning code
+      - .rds cleaned/managed data as network list
+      - .rmd sample analysis and visualization code
 
 ## Template questions
 
