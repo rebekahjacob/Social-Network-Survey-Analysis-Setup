@@ -83,8 +83,9 @@ color_pal= c("#15d4f7", "#f96e26")
 
 ### Contact
 ```{r}
+png("Network figures/contact-by-position.png")
 plot_deg_position(net_list$contactnet, "Contact by position")
-ggsave("Network figures/contact-by-position.png")
+dev.off()
 plot_deg_position(net_list$contactnet, "Contact by position")
 ```
 
@@ -116,6 +117,9 @@ plot_deg_position(net_list$presentnet, "Present by position")
 
 #### Any Collaboration Combined
 ```{r}
+png("Network figures/any-collab-by-position.png")
+plot_deg_position(net_list$anycollnet, "Any Collaboration Combined by position")
+dev.off()
 plot_deg_position(net_list$anycollnet, "Any Collaboration Combined by position")
 ```
 
