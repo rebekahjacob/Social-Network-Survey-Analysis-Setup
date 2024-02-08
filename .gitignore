@@ -3,7 +3,6 @@
 .RData
 .Ruserdata
 *.html
-*.pdf
 *.xlsx
 *.Rproj
 *.docx
